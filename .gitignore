@@ -1,0 +1,27 @@
+# Entorno virtual de Python
+.venv/
+
+# Variables de entorno con valores reales
+.env
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfvars
+.terraform.lock.hcl
+
+# Archivos compilados de Python
+__pycache__/
+*.py[cod]
+
+# Docker
+*.tar
+
+# Logs
+logs/
+
+# Archivos del sistema
+.DS_Store
+*.swp
+*.swo
