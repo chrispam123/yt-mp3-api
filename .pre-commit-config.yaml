@@ -1,0 +1,28 @@
+
+# =============================================================================
+# .pre-commit-config.yaml
+# Hooks que se ejecutan automáticamente antes de cada commit.
+# Si alguno falla, el commit se bloquea.
+# =============================================================================
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
+    hooks:
+      # Linter: detecta errores de estilo y calidad
+      - id: ruff
+        args: [--fix]
+      # Formateador: aplica formato consistente automáticamente
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      # Evita commitear claves privadas o credenciales accidentalmente
+      - id: detect-private-key
+      # Verifica que los archivos JSON son válidos
+      - id: check-json
+      # Elimina espacios en blanco al final de las líneas
+      - id: trailing-whitespace
+      # Asegura que los archivos terminan con una línea en blanco
+      - id: end-of-file-fixer
