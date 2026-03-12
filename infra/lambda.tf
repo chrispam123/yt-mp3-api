@@ -115,6 +115,8 @@ resource "aws_lambda_function" "coordinator" {
       ECS_CLUSTER     = aws_ecs_cluster.main.name
       TASK_DEFINITION = "${var.project_name}-worker"
       AWS_REGION      = var.aws_region
+      SUBNET_ID         = aws_subnet.public.id
+      SECURITY_GROUP_ID = aws_security_group.fargate.id
     }
   }
 
