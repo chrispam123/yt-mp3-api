@@ -15,8 +15,6 @@
 __pycache__/
 *.py[cod]
 
-build/
-
 # Docker
 *.tar
 
