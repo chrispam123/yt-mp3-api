@@ -31,6 +31,7 @@ resource "aws_iam_role" "lambda_role" {
   }
 }
 
+
 # Política de permisos mínimos para Lambda
 resource "aws_iam_role_policy" "lambda_policy" {
   name = "${var.project_name}-lambda-policy"
@@ -94,7 +95,9 @@ resource "aws_lambda_function" "coordinator" {
 
   # El código se desplegará desde un archivo zip
   # Por ahora usamos un placeholder hasta que el código esté listo
-  filename      = "lambda_placeholder.zip"
+filename         = "../build/lambda_placeholder.zip"
+source_code_hash = filebase64sha256("../build/lambda_placeholder.zip")
+
   handler       = "handler.lambda_handler"
   runtime       = "python3.11"
 
