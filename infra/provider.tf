@@ -3,7 +3,7 @@
 # guardará su estado. Este archivo es el primero que lee Terraform
 # y establece el contexto global de toda la infraestructura.
 # =============================================================================
-
+#forzar el git 
 terraform {
   # Versión mínima de Terraform requerida
   required_version = ">= 1.5.0"

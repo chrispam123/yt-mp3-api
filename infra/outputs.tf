@@ -4,7 +4,8 @@
 
 output "api_gateway_url" {
   description = "URL base de la API Gateway para usar en la app Android"
-  value       = aws_apigatewayv2_stage.default.invoke_url
+  value = aws_apigatewayv2_stage.main.invoke_url
+
 }
 
 output "s3_bucket_name" {
