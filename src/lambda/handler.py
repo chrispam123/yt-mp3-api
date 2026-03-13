@@ -155,6 +155,8 @@ def lambda_handler(event: dict, context) -> dict:
     Punto de entrada de Lambda.
     API Gateway envía el evento completo con método HTTP y path.
     """
+print(f"DEBUG EVENT: {json.dumps(event)}") # <--- AÑADE ESTO
+
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
     path   = event.get("requestContext", {}).get("http", {}).get("path", "")
 

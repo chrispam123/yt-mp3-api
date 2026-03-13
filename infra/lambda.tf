@@ -98,7 +98,7 @@ resource "aws_lambda_function" "coordinator" {
 filename         = "../build/lambda_placeholder.zip"
 source_code_hash = filebase64sha256("../build/lambda_placeholder.zip")
 
-  handler       = "handler.lambda_handler"
+  handler       = "src.lambda.handler.lambda_handler"
   runtime       = "python3.11"
 
   # Tiempo máximo de ejecución en segundos
