@@ -1,6 +1,6 @@
 
 # =============================================================================
-# Dockerfile
+# Dockerfile e
 # Empaqueta el worker de Fargate con Python, ffmpeg, yt-dlp
 # y todas las dependencias necesarias para procesar audio.
 # =============================================================================
