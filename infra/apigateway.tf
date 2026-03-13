@@ -26,6 +26,31 @@ resource "aws_apigatewayv2_api" "main" {
 }
 
 # -----------------------------------------------------------------------------
+# POLÍTICA DE RECURSOS DE CLOUDWATCH (Nativo para HTTP APIs v2)
+# -----------------------------------------------------------------------------
+# Reemplaza al antiguo Rol de IAM. Permite a API Gateway escribir logs directamente.
+resource "aws_cloudwatch_log_resource_policy" "apigw" {
+  policy_name = "${var.project_name}-apigw-logging-policy"
+  
+  policy_document = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = {
+          Service = "apigateway.amazonaws.com"
+        }
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ]
+        Resource = "*" 
+      }
+    ]
+  })
+}
+
+# -----------------------------------------------------------------------------
 # STAGE DE DESPLIEGUE
 # -----------------------------------------------------------------------------
 
@@ -34,9 +59,16 @@ resource "aws_apigatewayv2_stage" "main" {
   name        = var.environment
   auto_deploy = true
 
-  # Logs de acceso hacia CloudWatch
+  # Obligamos a Terraform a esperar a que la política nativa y el log group existan
+  depends_on = [
+    aws_cloudwatch_log_resource_policy.apigw,
+    aws_cloudwatch_log_group.api_gateway
+  ]
+
+  # Logs de acceso hacia CloudWatch (Limpiamos el ARN por si acaso)
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.api_gateway.arn
+    destination_arn = replace(aws_cloudwatch_log_group.api_gateway.arn, ":*", "")
+    format          = "$context.requestId $context.httpMethod $context.path $context.status"
   }
 
   tags = {
