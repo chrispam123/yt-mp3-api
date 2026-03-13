@@ -3,7 +3,7 @@
 
 # Variables de entorno con valores reales
 .env
-#lambda
+#lambda y .zip
 build/
 
 # Terraform
