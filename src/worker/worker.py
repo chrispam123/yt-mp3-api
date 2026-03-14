@@ -1,4 +1,3 @@
-
 """
 worker.py
 Responsabilidad: worker de Fargate.
@@ -9,24 +8,25 @@ descarga el audio, convierte a MP3, sube a S3 y actualiza el estado.
 import json
 import os
 import sys
-import boto3
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+
+import boto3
 
 # Añadimos src/shared al path para importar los módulos compartidos
 sys.path.append(str(Path(__file__).parent.parent / "shared"))
 
-from shared.downloader import download_audio
 from shared.converter import check_ffmpeg
+from shared.downloader import download_audio
 
 # Variables de entorno que Lambda pasa a Fargate al lanzar la tarea
-TASK_ID    = os.getenv("TASK_ID")
-URL        = os.getenv("URL")
-S3_BUCKET  = os.getenv("S3_BUCKET")
+TASK_ID = os.getenv("TASK_ID")
+URL = os.getenv("URL")
+S3_BUCKET = os.getenv("S3_BUCKET")
 AWS_REGION = os.getenv("AWS_REGION")
 
 s3_client = boto3.client("s3", region_name=AWS_REGION)
-TMP_DIR   = Path("/tmp/downloads")
+TMP_DIR = Path("/tmp/downloads")
 
 
 def update_status(task_id: str, status: str, extra: dict = {}) -> None:
@@ -44,26 +44,18 @@ def update_status(task_id: str, status: str, extra: dict = {}) -> None:
     # Escribimos el nuevo estado
     status_key = f"tasks/{task_id}/status={status}"
     payload = {
-        "task_id":    task_id,
-        "status":     status,
+        "task_id": task_id,
+        "status": status,
         "updated_at": datetime.utcnow().isoformat(),
-        **extra
+        **extra,
     }
-    s3_client.put_object(
-        Bucket=S3_BUCKET,
-        Key=status_key,
-        Body=json.dumps(payload).encode("utf-8")
-    )
+    s3_client.put_object(Bucket=S3_BUCKET, Key=status_key, Body=json.dumps(payload).encode("utf-8"))
 
 
 def upload_mp3(task_id: str, mp3_path: Path) -> str:
     """Sube el archivo MP3 a S3 y devuelve la key del objeto."""
     s3_key = f"tasks/{task_id}/audio.mp3"
-    s3_client.upload_file(
-        Filename=str(mp3_path),
-        Bucket=S3_BUCKET,
-        Key=s3_key
-    )
+    s3_client.upload_file(Filename=str(mp3_path), Bucket=S3_BUCKET, Key=s3_key)
     return s3_key
 
 
@@ -85,11 +77,7 @@ def main() -> None:
 
         # Paso 2: descargar y convertir audio
         print("→ Descargando audio...")
-        info = download_audio(
-            url=URL,
-            output_dir=TMP_DIR,
-            audio_quality=2
-        )
+        info = download_audio(url=URL, output_dir=TMP_DIR, audio_quality=2)
         print(f"✓ Audio descargado: {info['title']}")
 
         # Paso 3: encontrar el archivo MP3 generado
@@ -104,12 +92,16 @@ def main() -> None:
         print(f"✓ MP3 subido: {s3_key}")
 
         # Paso 5: actualizar estado a completed
-        update_status(TASK_ID, "completed", {
-            "title":    info["title"],
-            "duration": info["duration"],
-            "uploader": info["uploader"],
-            "s3_key":   s3_key
-        })
+        update_status(
+            TASK_ID,
+            "completed",
+            {
+                "title": info["title"],
+                "duration": info["duration"],
+                "uploader": info["uploader"],
+                "s3_key": s3_key,
+            },
+        )
         print(f"✓ Tarea {TASK_ID} completada")
 
     except Exception as e:
@@ -120,4 +112,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

@@ -45,4 +45,3 @@ USER appuser
 
 ENV PYTHONPATH="/app/src"
 CMD ["python", "src/worker/worker.py"]
-

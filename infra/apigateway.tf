@@ -31,7 +31,7 @@ resource "aws_apigatewayv2_api" "main" {
 # Reemplaza al antiguo Rol de IAM. Permite a API Gateway escribir logs directamente.
 resource "aws_cloudwatch_log_resource_policy" "apigw" {
   policy_name = "${var.project_name}-apigw-logging-policy"
-  
+
   policy_document = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -44,7 +44,7 @@ resource "aws_cloudwatch_log_resource_policy" "apigw" {
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ]
-        Resource = "*" 
+        Resource = "*"
       }
     ]
   })

@@ -79,7 +79,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
         Resource = [
           aws_iam_role.fargate_role.arn,
           # Si tienes un rol de ejecución separado (Task Execution Role), añádelo aquí también:
-          # aws_iam_role.ecs_task_execution_role.arn 
+          # aws_iam_role.ecs_task_execution_role.arn
         ]
       },
 

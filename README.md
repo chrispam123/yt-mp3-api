@@ -8,7 +8,7 @@ Arquitectura serverless con AWS Lambda, Fargate y S3.
 
     sudo apt update
     sudo apt install git python3 python3-pip python3-venv ffmpeg docker.io awscli -y
-    
+
 Instalar Terraform:
 
     wget https://releases.hashicorp.com/terraform/1.5.0/terraform_1.5.0_linux_amd64.zip
@@ -73,7 +73,7 @@ Luego configura tus credenciales:
                                 ├── descarga audio (yt-dlp)
                                 ├── convierte a MP3 (ffmpeg)
                                 └── sube MP3 + estado → S3
-                                
+
     App Android ← pre-signed URL ← Lambda ← polling S3
 
 ## Autor

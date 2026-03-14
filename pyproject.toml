@@ -15,4 +15,3 @@ ignore = []
 
 [tool.pip-tools]
 generate-hashes = false
-
