@@ -16,8 +16,8 @@ from datetime import datetime
 # Añadimos src/shared al path para importar los módulos compartidos
 sys.path.append(str(Path(__file__).parent.parent / "shared"))
 
-from downloader import download_audio
-from converter import check_ffmpeg
+from shared.downloader import download_audio
+from shared.converter import check_ffmpeg
 
 # Variables de entorno que Lambda pasa a Fargate al lanzar la tarea
 TASK_ID    = os.getenv("TASK_ID")

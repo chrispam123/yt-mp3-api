@@ -71,6 +71,18 @@ resource "aws_iam_role_policy" "lambda_policy" {
         # Solo puede pasar el rol de Fargate, no cualquier rol
         Resource = aws_iam_role.fargate_role.arn
       },
+
+      {
+        Sid      = "PassRole",
+        Effect   = "Allow",
+        Action   = "iam:PassRole",
+        Resource = [
+          aws_iam_role.fargate_role.arn,
+          # Si tienes un rol de ejecución separado (Task Execution Role), añádelo aquí también:
+          # aws_iam_role.ecs_task_execution_role.arn 
+        ]
+      },
+
       {
         Sid    = "CloudWatchLogs"
         Effect = "Allow"
@@ -117,7 +129,7 @@ source_code_hash = filebase64sha256("../build/lambda_placeholder.zip")
       S3_BUCKET       = aws_s3_bucket.main.bucket
       ECS_CLUSTER     = aws_ecs_cluster.main.name
       TASK_DEFINITION = "${var.project_name}-worker"
-        REGION_AWS = var.aws_region
+       REGION_NAME =        var.aws_region
       SUBNET_ID         = aws_subnet.public.id
       SECURITY_GROUP_ID = aws_security_group.fargate.id
     }

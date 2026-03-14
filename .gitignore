@@ -5,7 +5,7 @@
 .env
 #lambda y .zip
 build/
-
+infra/lambda_placeholder.zip
 # Terraform
 .terraform/
 *.tfstate
