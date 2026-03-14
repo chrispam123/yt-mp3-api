@@ -1,0 +1,83 @@
+
+# =============================================================================
+# ci.yml
+# Pipeline de CI que se ejecuta automáticamente en cada PR hacia develop y main.
+# Si algún paso falla el PR queda bloqueado hasta que se corrija.
+# =============================================================================
+
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - develop
+      - main
+  push:
+    branches:
+      - develop
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # JOB 1: Calidad del código Python
+  # ---------------------------------------------------------------------------
+  code-quality:
+    name: Code Quality
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependencias
+        run: |
+          pip install pip-tools
+          pip-sync requirements.txt
+
+      - name: Ejecutar pre-commit
+        uses: pre-commit/action@v3.0.1
+
+  # ---------------------------------------------------------------------------
+  # JOB 2: Validación de infraestructura Terraform
+  # ---------------------------------------------------------------------------
+  terraform-validate:
+    name: Terraform Validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generar Lambda zip para validación
+        run: |
+          mkdir -p build
+          zip -r build/lambda_placeholder.zip src/lambda/ src/shared/
+
+      - name: Configurar Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.0"
+
+      - name: Terraform Init (solo validación local, sin backend S3)
+        run: |
+          cd infra
+          terraform init -backend=false
+
+      - name: Terraform Validate
+        run: |
+          cd infra
+          terraform validate
+
+      - name: Terraform Format Check
+        run: |
+          cd infra
+          terraform fmt -check -recursive
