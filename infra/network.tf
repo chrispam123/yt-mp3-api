@@ -103,4 +103,3 @@ resource "aws_security_group" "fargate" {
     Name = "${var.project_name}-fargate-sg"
   }
 }
-
