@@ -1,3 +1,4 @@
+
 # =============================================================================
 # ci.yml
 # Pipeline de CI que se ejecuta automáticamente en cada PR hacia develop y main.
@@ -50,6 +51,16 @@ jobs:
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generar Lambda zip para validación
+        run: |
+          mkdir -p build
+          zip -r build/lambda_placeholder.zip src/lambda/ src/shared/
 
       - name: Configurar Terraform
         uses: hashicorp/setup-terraform@v3
