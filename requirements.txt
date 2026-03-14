@@ -64,6 +64,8 @@ virtualenv==21.2.0
     # via pre-commit
 wheel==0.46.3
     # via pip-tools
+yt-dlp==2026.3.13
+    # via -r requirements.in
 
 # The following packages are considered to be unsafe in a requirements file:
 # pip

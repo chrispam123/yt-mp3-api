@@ -14,7 +14,7 @@ ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
 # Directorio de trabajo dentro del contenedor
-WORKDIR /app
+WORKDIR /app/
 
 # Instalamos ffmpeg y dependencias del sistema
 # Limpiamos la caché de apt en el mismo layer para reducir tamaño de imagen
@@ -31,16 +31,18 @@ RUN apt-get update && \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiamos el código fuente
-COPY src/shared/ ./src/shared/
-COPY src/worker/ ./src/worker/
-
-# Usuario no root por seguridad
-# Nunca ejecutar contenedores como root en producción
+# Creamos el usuario sin privilegios
 RUN useradd --create-home appuser
+
+# Copiamos el código fuente asignando la propiedad al appuser desde el inicio
+COPY --chown=appuser:appuser src/ ./src/
+
+# Garantizamos que el appuser sea dueño del directorio de trabajo
+RUN chown -R appuser:appuser /app/
+
+# Cambiamos al usuario no root de forma segura
 USER appuser
 
-# Punto de entrada del contenedor
-# Fargate ejecutará este comando cuando arranque la tarea
+ENV PYTHONPATH="/app/src"
 CMD ["python", "src/worker/worker.py"]
 

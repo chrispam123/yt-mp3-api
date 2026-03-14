@@ -22,7 +22,7 @@ ecs_client = boto3.client("ecs")
 S3_BUCKET       = os.getenv("S3_BUCKET")
 ECS_CLUSTER     = os.getenv("ECS_CLUSTER")
 TASK_DEFINITION = os.getenv("TASK_DEFINITION")
-AWS_REGION      = os.getenv("AWS_REGION")
+AWS_REGION      = os.getenv("REGION_NAME")
 
 
 def response(status_code: int, body: dict) -> dict:
@@ -35,15 +35,9 @@ def response(status_code: int, body: dict) -> dict:
 
 
 def create_task(url: str) -> dict:
-    """
-    POST /download
-    Crea un registro de tarea en S3 con estado processing
-    y lanza una tarea de Fargate para procesar el audio.
-    """
     task_id = str(uuid.uuid4())
     status_key = f"tasks/{task_id}/status=processing"
 
-    # Registramos la tarea en S3 con estado processing
     s3_client.put_object(
         Bucket=S3_BUCKET,
         Key=status_key,
@@ -55,36 +49,51 @@ def create_task(url: str) -> dict:
         }).encode("utf-8")
     )
 
-    # Lanzamos la tarea de Fargate pasándole el task_id y la URL
-    ecs_client.run_task(
-        cluster=ECS_CLUSTER,
-        taskDefinition=TASK_DEFINITION,
-        launchType="FARGATE",
-        overrides={
-            "containerOverrides": [
-                {
-                    "name": f"{os.getenv('PROJECT_NAME')}-worker",
-                    "environment": [
-                        {"name": "TASK_ID", "value": task_id},
-                        {"name": "URL",     "value": url},
-                    ]
+    try:
+        container_name = f"{os.getenv('PROJECT_NAME')}-worker"
+        
+        print(f"DEBUG: Intentando lanzar tarea en cluster '{ECS_CLUSTER}' con contenedor '{container_name}'")
+
+        response_ecs = ecs_client.run_task(
+            cluster=ECS_CLUSTER,
+            taskDefinition=TASK_DEFINITION,
+            launchType="FARGATE",
+            overrides={
+                "containerOverrides": [
+                    {
+                        "name": container_name,
+                        "environment": [
+                            {"name": "TASK_ID", "value": task_id},
+                            {"name": "URL",     "value": url},
+                        ]
+                    }
+                ]
+            },
+            networkConfiguration={
+                "awsvpcConfiguration": {
+                    "subnets":        [os.getenv("SUBNET_ID")],
+                    "securityGroups": [os.getenv("SECURITY_GROUP_ID")],
+                    "assignPublicIp": "ENABLED"
                 }
-            ]
-        },
-        networkConfiguration={
-            "awsvpcConfiguration": {
-                "subnets":        [os.getenv("SUBNET_ID")],
-                "securityGroups": [os.getenv("SECURITY_GROUP_ID")],
-                "assignPublicIp": "ENABLED"
             }
-        }
-    )
+        )
+        print(f"DEBUG ECS RESPONSE: {json.dumps(response_ecs, default=str)}")
+
+    except Exception as e:
+        print(f"!!! ERROR LANZANDO ECS: {str(e)}")
+        s3_client.put_object(
+            Bucket=S3_BUCKET,
+            Key=f"tasks/{task_id}/status=error",
+            Body=json.dumps({"error": f"Error al lanzar worker: {str(e)}"}).encode("utf-8")
+        )
+        raise e
 
     return response(202, {
         "task_id": task_id,
         "status": "processing",
         "message": "Descarga iniciada correctamente"
     })
+
 
 
 def get_status(task_id: str) -> dict:
@@ -155,11 +164,14 @@ def lambda_handler(event: dict, context) -> dict:
     Punto de entrada de Lambda.
     API Gateway envía el evento completo con método HTTP y path.
     """
-print(f"DEBUG EVENT: {json.dumps(event)}") # <--- AÑADE ESTO
+    print(f"DEBUG EVENT: {json.dumps(event)}") # <--- AÑADE ESTO
 
     method = event.get("requestContext", {}).get("http", {}).get("method", "")
-    path   = event.get("requestContext", {}).get("http", {}).get("path", "")
-
+    full_path = event.get("requestContext", {}).get("http", {}).get("path", "")
+    # ESTO ES LO NUEVO: 
+    # Si el path es "/dev/download", esto lo convierte en "/download"
+    # Si el path es "/download", se queda igual.
+    path = "/" + full_path.split("/")[-1]
     # Health check
     if method == "GET" and path == "/health":
         return response(200, {"status": "healthy"})
