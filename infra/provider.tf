@@ -22,14 +22,13 @@ terraform {
     bucket  = "yt-mp3-api-terraform-state"
     key     = "dev/terraform.tfstate"
     region  = "eu-west-1"
-    profile = "yt_mp3_api_dev"
   }
 }
 
 # Configuración del provider de AWS
 provider "aws" {
   region  = var.aws_region
-  profile = var.aws_profile
+
 
   # Etiquetas por defecto que se aplicarán a todos los recursos
   # que Terraform cree. Esto es una buena práctica porque permite
