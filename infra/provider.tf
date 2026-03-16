@@ -19,17 +19,17 @@ terraform {
   # Este bucket fue creado manualmente en el paso de bootstrap
   # porque Terraform no puede crear su propio backend
   backend "s3" {
-    bucket  = "yt-mp3-api-terraform-state"
-    key     = "dev/terraform.tfstate"
-    region  = "eu-west-1"
-    profile = "yt_mp3_api_dev"
+    bucket = "yt-mp3-api-terraform-state"
+    key    = "dev/terraform.tfstate"
+    region = "eu-west-1"
+
   }
 }
 
 # Configuración del provider de AWS
 provider "aws" {
-  region  = var.aws_region
-  profile = var.aws_profile
+  region = var.aws_region
+
 
   # Etiquetas por defecto que se aplicarán a todos los recursos
   # que Terraform cree. Esto es una buena práctica porque permite
