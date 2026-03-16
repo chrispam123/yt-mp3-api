@@ -99,8 +99,8 @@ resource "aws_iam_role_policy" "fargate_policy" {
           "s3:DeleteObject"
         ]
         Resource = [
-        aws_s3_bucket.main.arn,
-         "${aws_s3_bucket.main.arn}/tasks/*"
+          aws_s3_bucket.main.arn,
+          "${aws_s3_bucket.main.arn}/tasks/*"
         ]
       },
       {
