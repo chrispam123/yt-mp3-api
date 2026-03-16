@@ -1,5 +1,5 @@
 # provider.tf
-# Configura el provider de AWS y el backend remoto donde Terraform
+# Configura el provider de AWS y el backend remoto donde Terraform siempre
 # guardará su estado. Este archivo es el primero que lee Terraform
 # y establece el contexto global de toda la infraestructura.
 # =============================================================================
@@ -22,14 +22,14 @@ terraform {
     bucket  = "yt-mp3-api-terraform-state"
     key     = "dev/terraform.tfstate"
     region  = "eu-west-1"
-    profile = "yt_mp3_api_dev"
+
   }
 }
 
 # Configuración del provider de AWS
 provider "aws" {
   region  = var.aws_region
-  profile = var.aws_profile
+
 
   # Etiquetas por defecto que se aplicarán a todos los recursos
   # que Terraform cree. Esto es una buena práctica porque permite
