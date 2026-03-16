@@ -94,9 +94,14 @@ resource "aws_iam_role_policy" "fargate_policy" {
         Sid    = "S3Access"
         Effect = "Allow"
         Action = [
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:ListBucket",
+          "s3:DeleteObject"
         ]
-        Resource = "${aws_s3_bucket.main.arn}/tasks/*"
+        Resource = [
+        aws_s3_bucket.main.arn,
+         "${aws_s3_bucket.main.arn}/tasks/*"
+        ]
       },
       {
         Sid    = "CloudWatchLogs"
