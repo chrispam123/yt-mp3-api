@@ -1,0 +1,5 @@
+boto3
+pre-commit
+pip-tools
+ruff
+yt-dlp
