@@ -105,7 +105,6 @@ def get_status(task_id: str) -> dict:
     """
     prefix = f"tasks/{task_id}/"
 
-    # Listamos los archivos del task_id para encontrar su estado actual
     result = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
 
     if "Contents" not in result:
@@ -113,9 +112,35 @@ def get_status(task_id: str) -> dict:
             404, {"task_id": task_id, "status": "not_found", "message": "Tarea no encontrada"}
         )
 
-    # Buscamos el archivo de estado entre los objetos del task
     keys = [obj["Key"] for obj in result["Contents"]]
     status_key = next((k for k in keys if "status=" in k), None)
+    mp3_exists = any("audio.mp3" in k for k in keys)
+
+    # PARCHE S3 consistencia eventual:
+    # Si el MP3 existe pero el estado aún no refleja completed
+    # por lag de S3, devolvemos completed directamente.
+    # El MP3 es la fuente de verdad real de que la tarea completó.
+    if mp3_exists and (status_key is None or "status=processing" in status_key):
+        mp3_key = f"tasks/{task_id}/audio.mp3"
+        presigned_url = s3_client.generate_presigned_url(
+            "get_object",
+            Params={"Bucket": S3_BUCKET, "Key": mp3_key},
+            ExpiresIn=900,
+        )
+        return response(
+            200,
+            {
+                "task_id": task_id,
+                "status": "completed",
+                "url": presigned_url,
+                "message": "MP3 listo para descargar",
+            },
+        )
+
+    if status_key is None:
+        return response(
+            404, {"task_id": task_id, "status": "not_found", "message": "Tarea no encontrada"}
+        )
 
     if "status=processing" in status_key:
         return response(
@@ -123,7 +148,6 @@ def get_status(task_id: str) -> dict:
         )
 
     if "status=error" in status_key:
-        # Leemos el archivo de error para obtener el mensaje
         error_obj = s3_client.get_object(Bucket=S3_BUCKET, Key=status_key)
         error_data = json.loads(error_obj["Body"].read().decode("utf-8"))
         return response(
@@ -136,12 +160,11 @@ def get_status(task_id: str) -> dict:
         )
 
     if "status=completed" in status_key:
-        # Generamos la pre-signed URL para que la app descargue el MP3
         mp3_key = f"tasks/{task_id}/audio.mp3"
         presigned_url = s3_client.generate_presigned_url(
             "get_object",
             Params={"Bucket": S3_BUCKET, "Key": mp3_key},
-            ExpiresIn=900,  # URL válida 15 minutos
+            ExpiresIn=900,
         )
         return response(
             200,
