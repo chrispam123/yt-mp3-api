@@ -190,8 +190,8 @@ def lambda_handler(event: dict, context) -> dict:
     full_path = event.get("requestContext", {}).get("http", {}).get("path", "")
     # ESTO ES LO NUEVO:
     # Si el path es "/dev/download", esto lo convierte en "/download"
-    # Si el path es "/download", se queda igual.
-    path = "/" + full_path.split("/")[-1]
+    # Si el path es "/download", se queda igual o.
+    path = full_path.replace("/dev", "", 1)
     # Health check
     if method == "GET" and path == "/health":
         return response(200, {"status": "healthy"})
