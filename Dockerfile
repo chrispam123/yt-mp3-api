@@ -1,47 +1,38 @@
-
-# =============================================================================
-# Dockerfile e
-# Empaqueta el worker de Fargate con Python, ffmpeg, yt-dlp
-# y todas las dependencias necesarias para procesar audio.
-# =============================================================================
-
-# Imagen base oficial de Python 3.11 slim para minimizar el tamaño
 FROM python:3.11-slim
 
-# Variables de entorno para evitar prompts interactivos durante la instalación
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONPATH=/app/src
 
-# Directorio de trabajo dentro del contenedor
-WORKDIR /app/
+WORKDIR /app
 
-# Instalamos ffmpeg y dependencias del sistema
-# Limpiamos la caché de apt en el mismo layer para reducir tamaño de imagen
+# Instalamos solo wget para descargar ffmpeg estático
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        ffmpeg \
-        gcc \
-        && \
+    apt-get install -y --no-install-recommends wget xz-utils && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copiamos requirements primero para aprovechar la caché de Docker
-# Si el código cambia pero requirements.txt no, Docker no reinstala dependencias
+# Descargamos ffmpeg como binario estático (~80MB vs ~600MB de apt)
+RUN wget -q https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz && \
+    tar xf ffmpeg-release-amd64-static.tar.xz && \
+    mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ && \
+    mv ffmpeg-*-amd64-static/ffprobe /usr/local/bin/ && \
+    rm -rf ffmpeg-* && \
+    apt-get purge -y wget xz-utils && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip cache purge && \
+    find /usr/local/lib/python3.11 -name "*.pyc" -delete && \
+    find /usr/local/lib/python3.11 -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
 
-# Creamos el usuario sin privilegios
-RUN useradd --create-home appuser
-
-# Copiamos el código fuente asignando la propiedad al appuser desde el inicio
 COPY --chown=appuser:appuser src/ ./src/
 
-# Garantizamos que el appuser sea dueño del directorio de trabajo
-RUN chown -R appuser:appuser /app/
-
-# Cambiamos al usuario no root de forma segura
+RUN useradd --create-home appuser && \
+    chown -R appuser:appuser /app
 USER appuser
 
-ENV PYTHONPATH="/app/src"
 CMD ["python", "src/worker/worker.py"]
