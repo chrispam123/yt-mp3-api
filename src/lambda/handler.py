@@ -104,14 +104,11 @@ def get_status(task_id: str) -> dict:
     Consulta el estado de una tarea leyendo los archivos en S3.
     """
     prefix = f"tasks/{task_id}/"
-
     result = s3_client.list_objects_v2(Bucket=S3_BUCKET, Prefix=prefix)
-
     if "Contents" not in result:
         return response(
             404, {"task_id": task_id, "status": "not_found", "message": "Tarea no encontrada"}
         )
-
     keys = [obj["Key"] for obj in result["Contents"]]
     status_key = next((k for k in keys if "status=" in k), None)
     mp3_exists = any("audio.mp3" in k for k in keys)
@@ -137,16 +134,30 @@ def get_status(task_id: str) -> dict:
             },
         )
 
+    # PARCHE S3 consistencia eventual para errores:
+    # Si existe status=error en las keys pero status_key aún apunta a processing,
+    # devolvemos el error directamente sin esperar al siguiente ciclo de polling.
+    error_key = next((k for k in keys if "status=error" in k), None)
+    if error_key and (status_key is None or "status=processing" in status_key):
+        error_obj = s3_client.get_object(Bucket=S3_BUCKET, Key=error_key)
+        error_data = json.loads(error_obj["Body"].read().decode("utf-8"))
+        return response(
+            200,
+            {
+                "task_id": task_id,
+                "status": "error",
+                "message": error_data.get("error", "Error desconocido"),
+            },
+        )
+
     if status_key is None:
         return response(
             404, {"task_id": task_id, "status": "not_found", "message": "Tarea no encontrada"}
         )
-
     if "status=processing" in status_key:
         return response(
             200, {"task_id": task_id, "status": "processing", "message": "Procesando audio..."}
         )
-
     if "status=error" in status_key:
         error_obj = s3_client.get_object(Bucket=S3_BUCKET, Key=status_key)
         error_data = json.loads(error_obj["Body"].read().decode("utf-8"))
@@ -158,7 +169,6 @@ def get_status(task_id: str) -> dict:
                 "message": error_data.get("error", "Error desconocido"),
             },
         )
-
     if "status=completed" in status_key:
         mp3_key = f"tasks/{task_id}/audio.mp3"
         presigned_url = s3_client.generate_presigned_url(
@@ -175,7 +185,6 @@ def get_status(task_id: str) -> dict:
                 "message": "MP3 listo para descargar",
             },
         )
-
     return response(500, {"task_id": task_id, "status": "unknown", "message": "Estado desconocido"})
 
 
