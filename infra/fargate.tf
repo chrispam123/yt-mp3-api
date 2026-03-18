@@ -96,13 +96,13 @@ resource "aws_iam_role_policy" "fargate_policy" {
         Action = [
           "s3:PutObject",
           "s3:ListBucket",
-	  "s3:GetObject",
+          "s3:GetObject",
           "s3:DeleteObject"
         ]
         Resource = [
           aws_s3_bucket.main.arn,
-          "${aws_s3_bucket.main.arn}/tasks/*" ,
-	  "${aws_s3_bucket.main.arn}/config/*"
+          "${aws_s3_bucket.main.arn}/tasks/*",
+          "${aws_s3_bucket.main.arn}/config/*"
 
         ]
       },

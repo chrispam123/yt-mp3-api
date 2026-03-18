@@ -58,7 +58,7 @@ variable "fargate_memory" {
     condition     = contains([512, 1024, 2048, 4096], var.fargate_memory)
     error_message = "Los valores válidos de memoria son 512, 1024, 2048 o 4096."
   }
- }
+}
 
 variable "rapidapi_key" {
   description = "API key de RapidAPI para ytjar"
