@@ -96,11 +96,14 @@ resource "aws_iam_role_policy" "fargate_policy" {
         Action = [
           "s3:PutObject",
           "s3:ListBucket",
+	  "s3:GetObject",
           "s3:DeleteObject"
         ]
         Resource = [
           aws_s3_bucket.main.arn,
-          "${aws_s3_bucket.main.arn}/tasks/*"
+          "${aws_s3_bucket.main.arn}/tasks/*" ,
+	  "${aws_s3_bucket.main.arn}/config/*"
+
         ]
       },
       {
@@ -163,6 +166,17 @@ resource "aws_ecs_task_definition" "worker" {
           name  = "AWS_REGION"
           value = var.aws_region
         },
+
+        {
+          name  = "RAPIDAPI_KEY"
+          value = var.rapidapi_key
+        },
+
+        {
+          name  = "RAPIDAPI_HOST"
+          value = "youtube-mp36.p.rapidapi.com"
+        },
+
         {
           name  = "ENVIRONMENT"
           value = var.environment
