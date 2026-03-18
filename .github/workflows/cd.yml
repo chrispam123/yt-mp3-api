@@ -28,7 +28,9 @@ jobs:
     name: Terraform Deploy
     runs-on: ubuntu-latest
     environment: ${{ github.event.inputs.environment }}
-
+ # AÑADE ESTE BLOQUE ENV:
+    env:
+      TF_VAR_rapidapi_key: ${{ secrets.RAPIDAPI_KEY }}
     steps:
       - name: Checkout código
         uses: actions/checkout@v4

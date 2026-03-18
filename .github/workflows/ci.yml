@@ -47,7 +47,8 @@ jobs:
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest
-
+    env:
+      TF_VAR_rapidapi_key: ${{ secrets.RAPIDAPI_KEY }}
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
