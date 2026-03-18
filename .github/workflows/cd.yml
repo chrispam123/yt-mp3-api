@@ -17,7 +17,9 @@ on:
         type: choice
         options:
           - dev
-
+  push:
+    branches:
+      - develop
 jobs:
   # ---------------------------------------------------------------------------
   # JOB 1: Despliegue de infraestructura con Terraform

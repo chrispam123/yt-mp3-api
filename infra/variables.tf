@@ -38,7 +38,6 @@ variable "aws_account_id" {
   default     = "380894354766"
 }
 
-
 variable "fargate_cpu" {
   description = "CPU asignada a la tarea Fargate en unidades de CPU de ECS (256 = 0.25 vCPU)"
   type        = number
@@ -59,4 +58,12 @@ variable "fargate_memory" {
     condition     = contains([512, 1024, 2048, 4096], var.fargate_memory)
     error_message = "Los valores válidos de memoria son 512, 1024, 2048 o 4096."
   }
+}
+
+variable "rapidapi_key" {
+  description = "API key de RapidAPI para ytjar"
+  type        = string
+  sensitive   = true
+  default     = ""
+
 }
